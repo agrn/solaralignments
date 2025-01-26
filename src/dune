@@ -1,0 +1,5 @@
+(executable
+  (name sundown)
+  (modes exe)
+  (modules_without_implementation Coordinates)
+  (libraries calendar))
