@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="initial-scale=1.0, width=device-width" />
+    <title>Solar alignments</title>
+    <link rel="stylesheet" href="https://www.pa1ch.fr/theme/css/theme.css" />
+    <link rel="stylesheet" href="leaflet/leaflet.css" />
+    <script src="leaflet/leaflet.js"></script>
+    <style>
+.leaflet-container {
+    height: 400px;
+    max-width: 100%;
+    max-height: 100%;
+}
+
+form {
+    display: table;
+    margin: auto;
+}
+
+form div {
+    display: table-row;
+}
+
+label, input, select {
+    display: table-cell;
+    margin-bottom: 10px;
+}
+
+label {
+    padding-right: 10px;
+}
+    </style>
+  </head>
+  <body>
+    <header>
+      <nav>
+      </nav>
+      <h1>Solar alignments</h1>
+    </header>
+    <main>
+      <form id="form">
+        <div>
+          <div>
+            <label for="date">Date</label>
+            <input type="date" name="date" id="date" required />
+          </div>
+        </div>
+        <fieldset>
+          <legend>Localisation</legend>
+          <div>
+            <label for="preset">Preset</label>
+            <select name="preset" id="preset">
+              <option></option>
+              <option>Pic du Midi de Bigorre from Toulouse</option>
+            </select>
+          </div>
+          <div>
+            <label for="longitude">Longitude</label>
+            <input type="number" name="longitude" id="longitude" step="any" required /><br />
+          </div>
+          <div>
+            <label for="latitude">Latitude</label>
+            <input type="number" name="latitude" id="latitude" step="any" required /><br />
+          </div>
+          <div>
+            <label for="lowest">Lowest</label>
+            <input type="number" name="lowest" id="lowest" step="any" required /><br />
+          </div>
+          <div>
+            <label for="highest">Highest</label>
+            <input type="number" name="highest" id="highest" step="any" required /><br />
+          </div>
+          <div>
+            <label for="distance">Distance (in meters)</label>
+            <input type="number" name="distance" id="distance" step="any" required /><br />
+          </div>
+        </fieldset>
+        <input type="submit" id="compute" value="Find alignments" />
+      </form>
+      <div id="map"></div>
+    </main>
+    <script>
+      const map = L.map('map').setView([42.937056, 0.141277], 13);
+
+      const tiles = L.tileLayer('https://b.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+          attribution: '&copy; Data from <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>; map tiles from <a href="https://www.openstreetmap.fr/mentions-legales/">OpenStreetMap France</a>'
+      }).addTo(map);
+
+      var layerGroup = L.layerGroup().addTo(map);
+
+      var date = document.getElementById("date");
+      var longitude = document.getElementById("longitude");
+      var latitude = document.getElementById("latitude");
+      var lowest = document.getElementById("lowest");
+      var highest = document.getElementById("highest");
+      var distance = document.getElementById("distance");
+
+      document.getElementById("form").onsubmit = function(e) {
+          e.preventDefault();
+
+          layerGroup.clearLayers();
+
+          var lat = latitude.valueAsNumber;
+          var longi = longitude.valueAsNumber;
+
+          var found = alignment.find(
+              date.valueAsDate, lat, longi,
+              lowest.valueAsNumber, highest.valueAsNumber, distance.valueAsNumber);
+
+          var lines = found.map((entry) => {
+              var lat2 = entry[3][1];
+              var long2 = entry[3][2];
+
+              var line = L.polyline([[lat, longi], [lat2, long2]], {color: "red"}).addTo(layerGroup);
+              line.bindPopup(entry[1].toLocaleTimeString() + "; alt=" + entry[2][1] + "°");
+              return line
+          });
+
+          map.fitBounds(lines[0].getBounds());
+
+          return false;
+      }
+    </script>
+    <script src="sundownjs.bc.js"></script>
+  </body>
+</html>

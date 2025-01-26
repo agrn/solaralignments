@@ -3,3 +3,14 @@
   (modes exe)
   (modules_without_implementation Coordinates)
   (libraries calendar))
+
+(executable
+  (name sundownjs)
+  (modes js)
+  (modules_without_implementation Coordinates)
+  (preprocess (pps js_of_ocaml-ppx))
+  (libraries calendar js_of_ocaml))
+
+(alias
+ (name web)
+ (deps sundownjs.bc.js index.html (source_tree leaflet)))
