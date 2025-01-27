@@ -98,6 +98,7 @@ label {
       var linesGroup = L.layerGroup().addTo(map);
       var pinGroup = L.layerGroup().addTo(map);
 
+      var preset = document.getElementById("preset");
       var date = document.getElementById("date");
       var longitude = document.getElementById("longitude");
       var latitude = document.getElementById("latitude");
@@ -107,12 +108,18 @@ label {
 
       var pin = document.getElementById("pin");
 
+      function resetPresetIndex() {
+          preset.selectedIndex = 0;
+          return true;
+      }
+
       function updatePin(lat, lng) {
           pinGroup.clearLayers();
           L.marker([lat, lng]).addTo(pinGroup);
       }
 
       function readAndUpdatePin(_evt) {
+          resestPresetIndex();
           updatePin(latitude.valueAsNumber, longitude.valueAsNumber);
           return true;
       }
@@ -150,6 +157,7 @@ label {
           if (pin.checked) {
               longitude.value = e.latlng.lng;
               latitude.value = e.latlng.lat;
+              resetPresetIndex();
               updatePin(e.latlng.lat, e.latlng.lng);
               pin.checked = false;
           }
@@ -159,6 +167,9 @@ label {
 
       longitude.onchange = readAndUpdatePin;
       latitude.onchange = readAndUpdatePin;
+      lowest.onchange = resetPresetIndex;
+      highest.onchange = resetPresetIndex;
+      distance.onchange = resetPresetIndex;
     </script>
     <script src="sundownjs.bc.js"></script>
   </body>
