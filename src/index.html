@@ -77,7 +77,13 @@ label {
             <input type="number" name="distance" id="distance" required /><br />
           </div>
         </fieldset>
-        <input type="submit" id="compute" value="Find alignments" />
+        <div>
+          <div>
+            <input type="submit" id="compute" value="Find alignments" />
+            <input type="checkbox" name="pin" id="pin" />
+            <label for="pin">Select place on the map</label>
+          </div>
+        </div>
       </form>
       <div id="map"></div>
     </main>
@@ -89,7 +95,8 @@ label {
           attribution: '&copy; Data from <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>; map tiles from <a href="https://www.openstreetmap.fr/mentions-legales/">OpenStreetMap France</a>'
       }).addTo(map);
 
-      var layerGroup = L.layerGroup().addTo(map);
+      var linesGroup = L.layerGroup().addTo(map);
+      var pinGroup = L.layerGroup().addTo(map);
 
       var date = document.getElementById("date");
       var longitude = document.getElementById("longitude");
@@ -98,23 +105,38 @@ label {
       var highest = document.getElementById("highest");
       var distance = document.getElementById("distance");
 
+      var pin = document.getElementById("pin");
+
+      function updatePin(lat, lng) {
+          pinGroup.clearLayers();
+          L.marker([lat, lng]).addTo(pinGroup);
+      }
+
+      function readAndUpdatePin(_evt) {
+          updatePin(latitude.valueAsNumber, longitude.valueAsNumber);
+          return true;
+      }
+
       document.getElementById("form").onsubmit = function(e) {
           e.preventDefault();
 
-          layerGroup.clearLayers();
+          linesGroup.clearLayers();
 
           var lat = latitude.valueAsNumber;
-          var longi = longitude.valueAsNumber;
+          var lng = longitude.valueAsNumber;
+
+          pin.checked = false;
+          updatePin(lat, lng);
 
           var found = alignment.find(
-              date.valueAsDate, lat, longi,
+              date.valueAsDate, lat, lng,
               lowest.valueAsNumber, highest.valueAsNumber, distance.valueAsNumber);
 
           var lines = found.map((entry) => {
               var lat2 = entry[3][1];
-              var long2 = entry[3][2];
+              var lng2 = entry[3][2];
 
-              var line = L.polyline([[lat, longi], [lat2, long2]], {color: "red"}).addTo(layerGroup);
+              var line = L.polyline([[lat, lng], [lat2, lng2]], {color: "red"}).addTo(linesGroup);
               line.bindPopup(entry[1].toLocaleTimeString() + "; alt=" + entry[2][1] + "°");
               return line
           });
@@ -123,6 +145,20 @@ label {
 
           return false;
       }
+
+      map.on('click', (e) => {
+          if (pin.checked) {
+              longitude.value = e.latlng.lng;
+              latitude.value = e.latlng.lat;
+              updatePin(e.latlng.lat, e.latlng.lng);
+              pin.checked = false;
+          }
+
+          return true;
+      });
+
+      longitude.onchange = readAndUpdatePin;
+      latitude.onchange = readAndUpdatePin;
     </script>
     <script src="sundownjs.bc.js"></script>
   </body>

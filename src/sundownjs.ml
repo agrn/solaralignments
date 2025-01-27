@@ -21,6 +21,9 @@ let (>>=) = Option.bind
 
 let get_field id = Dom_html.(getElementById_coerce id CoerceTo.input)
 
+let update_pin (lat : float) (lng : float) =
+  ignore @@ Js.Unsafe.fun_call (Js.Unsafe.js_expr "updatePin") [|Js.Unsafe.inject lat; Js.Unsafe.inject lng|]
+
 let setup_presets (preset_field : Dom_html.selectElement Js.t) longitude_field latitude_field lowest_field highest_field distance_field =
   let write_value value field =
     let num = Js.number_of_float value in
@@ -41,6 +44,7 @@ let setup_presets (preset_field : Dom_html.selectElement Js.t) longitude_field l
                write_value preset.lowest lowest_field;
                write_value preset.highest highest_field;
                write_value preset.distance distance_field;
+               update_pin preset.latitude preset.longitude;
                None)
           end;
         Js._true)
