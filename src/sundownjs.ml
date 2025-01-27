@@ -45,6 +45,14 @@ let setup_presets (preset_field : Dom_html.selectElement Js.t) longitude_field l
           end;
         Js._true)
 
+let setup_today today_button date_field =
+  today_button##.onclick :=
+    Dom_html.handler (fun evt ->
+        Dom.preventDefault evt;
+        let today = Printer.Date.to_string @@ Date.today () in
+        date_field##.value := Js.string today;
+        Js._true)
+
 let alignment_find date latitude longitude lowest highest distance =
   let date = Date.make (date##getFullYear) (date##getMonth + 1) (date##getDate) in
   match Alignment.find date longitude latitude lowest highest distance with
@@ -69,9 +77,13 @@ let () =
      end);
   ignore @@
     (Dom_html.(getElementById_coerce "preset" CoerceTo.select) >>= fun preset_field ->
+     Dom_html.(getElementById_coerce "today" CoerceTo.button) >>= fun today_button ->
+     get_field "date" >>= fun date_field ->
      get_field "longitude" >>= fun longitude_field ->
      get_field "latitude" >>= fun latitude_field ->
      get_field "lowest" >>= fun lowest_field ->
      get_field "highest" >>= fun highest_field ->
      get_field "distance" >>= fun distance_field ->
-     Some (setup_presets preset_field longitude_field latitude_field lowest_field highest_field distance_field))
+     setup_presets preset_field longitude_field latitude_field lowest_field highest_field distance_field;
+     setup_today today_button date_field;
+     None)
