@@ -57,6 +57,17 @@ let setup_today today_button date_field =
         date_field##.value := Js.string today;
         Js._true)
 
+let reset_preset_index preset_field _evt =
+  preset_field##.selectedIndex := 0;
+  Js._true
+
+let read_and_update_pin preset_field longitude_field latitude_field evt =
+  ignore @@ reset_preset_index preset_field evt;
+  let lat = Js.parseFloat latitude_field##.value in
+  let lng = Js.parseFloat longitude_field##.value in
+  update_pin lat lng;
+  Js._true
+
 let alignment_find date latitude longitude lowest highest distance =
   let date = Date.make (date##getFullYear) (date##getMonth + 1) (date##getDate) in
   match Alignment.find date longitude latitude lowest highest distance with
@@ -90,4 +101,9 @@ let () =
      get_field "distance" >>= fun distance_field ->
      setup_presets preset_field longitude_field latitude_field lowest_field highest_field distance_field;
      setup_today today_button date_field;
+     longitude_field##.onchange := Dom_html.handler (read_and_update_pin preset_field longitude_field latitude_field);
+     latitude_field##.onchange := Dom_html.handler (read_and_update_pin preset_field longitude_field latitude_field);
+     lowest_field##.onchange := Dom_html.handler (reset_preset_index preset_field);
+     highest_field##.onchange := Dom_html.handler (reset_preset_index preset_field);
+     distance_field##.onchange := Dom_html.handler (reset_preset_index preset_field);
      None)

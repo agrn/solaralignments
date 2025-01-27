@@ -108,20 +108,9 @@ label {
 
       var pin = document.getElementById("pin");
 
-      function resetPresetIndex() {
-          preset.selectedIndex = 0;
-          return true;
-      }
-
       function updatePin(lat, lng) {
           pinGroup.clearLayers();
           L.marker([lat, lng]).addTo(pinGroup);
-      }
-
-      function readAndUpdatePin(_evt) {
-          resestPresetIndex();
-          updatePin(latitude.valueAsNumber, longitude.valueAsNumber);
-          return true;
       }
 
       document.getElementById("form").onsubmit = function(e) {
@@ -157,19 +146,13 @@ label {
           if (pin.checked) {
               longitude.value = e.latlng.lng;
               latitude.value = e.latlng.lat;
-              resetPresetIndex();
+              preset.selectedIndex = 0;
               updatePin(e.latlng.lat, e.latlng.lng);
               pin.checked = false;
           }
 
           return true;
       });
-
-      longitude.onchange = readAndUpdatePin;
-      latitude.onchange = readAndUpdatePin;
-      lowest.onchange = resetPresetIndex;
-      highest.onchange = resetPresetIndex;
-      distance.onchange = resetPresetIndex;
     </script>
     <script src="sundownjs.bc.js"></script>
   </body>
