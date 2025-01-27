@@ -24,10 +24,11 @@ let get_field id = Dom_html.(getElementById_coerce id CoerceTo.input)
 let update_pin (lat : float) (lng : float) =
   ignore @@ Js.Unsafe.fun_call (Js.Unsafe.js_expr "updatePin") [|Js.Unsafe.inject lat; Js.Unsafe.inject lng|]
 
+let write_value value field =
+  let num = Js.number_of_float value in
+  field##.value := num##toString
+
 let setup_presets (preset_field : Dom_html.selectElement Js.t) longitude_field latitude_field lowest_field highest_field distance_field =
-  let write_value value field =
-    let num = Js.number_of_float value in
-    field##.value := num##toString in
   let document = Dom_html.document in
   List.iter (fun preset ->
       let option = Dom_html.createOption document in
@@ -68,6 +69,15 @@ let read_and_update_pin preset_field longitude_field latitude_field evt =
   update_pin lat lng;
   Js._true
 
+let handle_map_click_event pin_check preset_field longitude_field latitude_field lat lng =
+  if Js.to_bool pin_check##.checked then begin
+      write_value lat latitude_field;
+      write_value lng longitude_field;
+      preset_field##.selectedIndex := 0;
+      update_pin lat lng;
+      pin_check##.checked := Js._false
+    end
+
 let alignment_find date latitude longitude lowest highest distance =
   let date = Date.make (date##getFullYear) (date##getMonth + 1) (date##getDate) in
   match Alignment.find date longitude latitude lowest highest distance with
@@ -86,10 +96,6 @@ let alignment_find date latitude longitude lowest highest distance =
      end
 
 let () =
-  Js.export "alignment"
-    (object%js
-       method find = alignment_find
-     end);
   ignore @@
     (Dom_html.(getElementById_coerce "preset" CoerceTo.select) >>= fun preset_field ->
      Dom_html.(getElementById_coerce "today" CoerceTo.button) >>= fun today_button ->
@@ -99,6 +105,7 @@ let () =
      get_field "lowest" >>= fun lowest_field ->
      get_field "highest" >>= fun highest_field ->
      get_field "distance" >>= fun distance_field ->
+     get_field "pin" >>= fun pin_check ->
      setup_presets preset_field longitude_field latitude_field lowest_field highest_field distance_field;
      setup_today today_button date_field;
      longitude_field##.onchange := Dom_html.handler (read_and_update_pin preset_field longitude_field latitude_field);
@@ -106,4 +113,9 @@ let () =
      lowest_field##.onchange := Dom_html.handler (reset_preset_index preset_field);
      highest_field##.onchange := Dom_html.handler (reset_preset_index preset_field);
      distance_field##.onchange := Dom_html.handler (reset_preset_index preset_field);
+     Js.export "alignment"
+       (object%js
+          method find = alignment_find
+          method handleMapClickEvent = handle_map_click_event pin_check preset_field longitude_field latitude_field
+        end);
      None)

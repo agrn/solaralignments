@@ -98,7 +98,6 @@ label {
       var linesGroup = L.layerGroup().addTo(map);
       var pinGroup = L.layerGroup().addTo(map);
 
-      var preset = document.getElementById("preset");
       var date = document.getElementById("date");
       var longitude = document.getElementById("longitude");
       var latitude = document.getElementById("latitude");
@@ -143,14 +142,7 @@ label {
       }
 
       map.on('click', (e) => {
-          if (pin.checked) {
-              longitude.value = e.latlng.lng;
-              latitude.value = e.latlng.lat;
-              preset.selectedIndex = 0;
-              updatePin(e.latlng.lat, e.latlng.lng);
-              pin.checked = false;
-          }
-
+          alignment.handleMapClickEvent(e.latlng.lat, e.latlng.lng);
           return true;
       });
     </script>
