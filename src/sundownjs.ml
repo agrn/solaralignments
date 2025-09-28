@@ -64,8 +64,10 @@ let reset_preset_index preset_field _evt =
 
 let read_and_update_pin preset_field longitude_field latitude_field evt =
   ignore @@ reset_preset_index preset_field evt;
-  let lat = Js.parseFloat latitude_field##.value in
-  let lng = Js.parseFloat longitude_field##.value in
+  let read_float_from_field field =
+    Js.(to_float @@ parseFloat field##.value) in
+  let lat = read_float_from_field latitude_field and
+      lng = read_float_from_field longitude_field in
   update_pin lat lng;
   Js._true
 
