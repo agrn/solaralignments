@@ -46,6 +46,7 @@ let sidereal_time ?(add_nutation=false) dt =
   theta0 %. 360.
 
 let local_hour sidereal longitude ra =
+  (* Astronomical Algorithms, Jean Meeus, Chapitre 12 *)
   sidereal -. longitude -. ra
 
 let alt lh latitude coords =
