@@ -11,7 +11,5 @@ let () =
   | Some l ->
      Time_Zone.(change Local);
      List.iter
-       (function
-        | dt, pos, Some (x, y, _) ->
-           Printf.printf "At %s, az=%f, alt=%f (pos at %f, %f)\n" (Printer.Calendar.to_string dt) pos.az pos.alt x y
-        | dt, _, None -> Printf.printf "Limit not found at %s\n" (Printer.Calendar.to_string dt)) l
+       (fun (dt, pos, (x, y, _)) ->
+         Printf.printf "At %s, az=%f, alt=%f (pos at %f, %f)\n" (Printer.Calendar.to_string dt) pos.az pos.alt x y) l
