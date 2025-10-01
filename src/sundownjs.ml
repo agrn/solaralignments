@@ -96,17 +96,12 @@ let alignment_find date latitude longitude lowest highest distance =
   match Alignment.find date longitude latitude lowest highest distance with
   | None -> Js.Optdef.empty
   | Some l ->
-     begin
-       Time_Zone.(change Local);
-       let result = List.map (fun (dt, pos, coords) ->
-                        Calendar.(new%js Js.date_min (year dt) (Date.int_of_month (month dt)) (day_of_month dt) (hour dt) (minute dt)),
-                        pos, coords) l
-                    |> Array.of_list
-                    |> Js.array
-                    |> Js.Optdef.return in
-       Time_Zone.(change UTC);
-       result
-     end
+     List.map (fun (dt, pos, coords) ->
+         Calendar.(new%js Js.date_min (year dt) (Date.int_of_month (month dt)) (day_of_month dt) (hour dt) (minute dt)),
+         pos, coords) l
+     |> Array.of_list
+     |> Js.array
+     |> Js.Optdef.return
 
 let () =
   ignore @@
