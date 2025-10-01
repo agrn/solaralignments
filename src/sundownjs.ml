@@ -17,7 +17,7 @@ let presets = [
      longitude = 0.141277; latitude = 42.937056; lowest = 1.44; highest = 1.79; distance = 150000.}
   ]
 
-let (>>=) = Option.bind
+let (let*) = Option.bind
 
 let get_field id = Dom_html.(getElementById_coerce id CoerceTo.input)
 
@@ -39,14 +39,14 @@ let setup_presets (preset_field : Dom_html.selectElement Js.t) longitude_field l
         let idx = preset_field##.selectedIndex - 1 in
         if idx >= 0 then begin
             ignore @@
-              (List.nth_opt presets idx >>= fun preset ->
-               write_value preset.longitude longitude_field;
-               write_value preset.latitude latitude_field;
-               write_value preset.lowest lowest_field;
-               write_value preset.highest highest_field;
-               write_value preset.distance distance_field;
-               update_pin preset.latitude preset.longitude;
-               None)
+              let* preset = List.nth_opt presets idx in
+              write_value preset.longitude longitude_field;
+              write_value preset.latitude latitude_field;
+              write_value preset.lowest lowest_field;
+              write_value preset.highest highest_field;
+              write_value preset.distance distance_field;
+              update_pin preset.latitude preset.longitude;
+              None
           end;
         Js._true)
 
@@ -99,25 +99,25 @@ let alignment_find date latitude longitude lowest highest distance =
 
 let () =
   ignore @@
-    (Dom_html.(getElementById_coerce "preset" CoerceTo.select) >>= fun preset_field ->
-     Dom_html.(getElementById_coerce "today" CoerceTo.button) >>= fun today_button ->
-     get_field "date" >>= fun date_field ->
-     get_field "longitude" >>= fun longitude_field ->
-     get_field "latitude" >>= fun latitude_field ->
-     get_field "lowest" >>= fun lowest_field ->
-     get_field "highest" >>= fun highest_field ->
-     get_field "distance" >>= fun distance_field ->
-     get_field "pin" >>= fun pin_check ->
-     setup_presets preset_field longitude_field latitude_field lowest_field highest_field distance_field;
-     setup_today today_button date_field;
-     longitude_field##.onchange := Dom_html.handler (read_and_update_pin preset_field longitude_field latitude_field);
-     latitude_field##.onchange := Dom_html.handler (read_and_update_pin preset_field longitude_field latitude_field);
-     lowest_field##.onchange := Dom_html.handler (reset_preset_index preset_field);
-     highest_field##.onchange := Dom_html.handler (reset_preset_index preset_field);
-     distance_field##.onchange := Dom_html.handler (reset_preset_index preset_field);
-     Js.export "alignment"
-       (object%js
-          method find = alignment_find
-          method handleMapClickEvent = handle_map_click_event pin_check preset_field longitude_field latitude_field
-        end);
-     None)
+    let* preset_field = Dom_html.(getElementById_coerce "preset" CoerceTo.select) in
+    let* today_button = Dom_html.(getElementById_coerce "today" CoerceTo.button) in
+    let* date_field = get_field "date" in
+    let* longitude_field = get_field "longitude" in
+    let* latitude_field = get_field "latitude" in
+    let* lowest_field = get_field "lowest" in
+    let* highest_field = get_field "highest" in
+    let* distance_field = get_field "distance" in
+    let* pin_check = get_field "pin" in
+    setup_presets preset_field longitude_field latitude_field lowest_field highest_field distance_field;
+    setup_today today_button date_field;
+    longitude_field##.onchange := Dom_html.handler (read_and_update_pin preset_field longitude_field latitude_field);
+    latitude_field##.onchange := Dom_html.handler (read_and_update_pin preset_field longitude_field latitude_field);
+    lowest_field##.onchange := Dom_html.handler (reset_preset_index preset_field);
+    highest_field##.onchange := Dom_html.handler (reset_preset_index preset_field);
+    distance_field##.onchange := Dom_html.handler (reset_preset_index preset_field);
+    Js.export "alignment"
+      (object%js
+         method find = alignment_find
+         method handleMapClickEvent = handle_map_click_event pin_check preset_field longitude_field latitude_field
+       end);
+    None
