@@ -98,7 +98,7 @@ let solar jd =
 
 let sunset ?(add_nutation=false) date longitude latitude =
   (* Calcul de l'heure du coucher du soleil, basé sur Astronomical Algorithms, Jean Meeus, Chapitre 14 *)
-  let posd = Calendar.(solar @@ to_jd @@ from_date date) in
+  let posd = Calendar.(to_jd @@ from_date date) |> solar in
 
   let h0 = -0.8333 in
   let theta0 = sidereal_time ~add_nutation (Calendar.from_date date) in
