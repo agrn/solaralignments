@@ -34,7 +34,7 @@ form {
           </div>
         </div>
         <fieldset>
-          <legend>Localisation</legend>
+          <legend>Target</legend>
           <div>
             <label for="preset">Preset</label>
             <select name="preset" id="preset">
@@ -42,24 +42,35 @@ form {
             </select>
           </div>
           <div>
-            <label for="longitude">Longitude</label>
+            <label for="longitude">Longitude (°)</label>
             <input type="number" name="longitude" id="longitude" step="any" required /><br />
           </div>
           <div>
-            <label for="latitude">Latitude</label>
+            <label for="latitude">Latitude (°)</label>
             <input type="number" name="latitude" id="latitude" step="any" required /><br />
           </div>
           <div>
-            <label for="lowest">Lowest</label>
+            <label for="altitude">Target altitude (m)</label>
+            <input type="number" name="altitude" id="altitude" step="1" required /><br />
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>Observer</legend>
+          <div>
+            <label for="altitude">Observer altitude (m)</label>
+            <input type="number" name="observer" id="observer" step="1" required /><br />
+          </div>
+          <div>
+            <label for="distance">Distance (m)</label>
+            <input type="number" name="distance" id="distance" required /><br />
+         </div>
+         <div>
+            <label for="lowest">Lowest (°)</label>
             <input type="number" name="lowest" id="lowest" step="any" required /><br />
           </div>
           <div>
-            <label for="highest">Highest</label>
+            <label for="highest">Highest (°)</label>
             <input type="number" name="highest" id="highest" step="any" required /><br />
-          </div>
-          <div>
-            <label for="distance">Distance (in meters)</label>
-            <input type="number" name="distance" id="distance" required /><br />
           </div>
         </fieldset>
         <div>
@@ -102,6 +113,7 @@ form {
       var date = document.getElementById("date");
       var longitude = document.getElementById("longitude");
       var latitude = document.getElementById("latitude");
+      var altitude = document.getElementById("altitude");
       var lowest = document.getElementById("lowest");
       var highest = document.getElementById("highest");
       var distance = document.getElementById("distance");

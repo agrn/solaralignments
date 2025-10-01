@@ -7,14 +7,15 @@ type preset = {
     name : string;
     latitude : float;
     longitude : float;
-    lowest : float;
-    highest : float;
+    target_altitude : float;
+    observer_altitude : float;
     distance : float
   }
 
 let presets = [
-    {name = "Pic du Midi de Bigorre from Toulouse";
-     longitude = 0.141277; latitude = 42.937056; lowest = 1.44; highest = 1.79; distance = 150000.}
+    {name = "Pic du Midi de Bigorre";
+     longitude = 0.141277; latitude = 42.937056; target_altitude = 2877.;
+     observer_altitude = 200.; distance = 150000.}
   ]
 
 let (let*) = Option.bind
@@ -24,11 +25,23 @@ let get_field id = Dom_html.(getElementById_coerce id CoerceTo.input)
 let update_pin (lat : float) (lng : float) =
   ignore @@ Js.Unsafe.fun_call (Js.Unsafe.js_expr "updatePin") [|Js.Unsafe.inject lat; Js.Unsafe.inject lng|]
 
+let read_float_from_field field =
+  Js.(to_float @@ parseFloat field##.value)
+
 let write_value value field =
   let num = Js.number_of_float value in
   field##.value := num##toString
 
-let setup_presets (preset_field : Dom_html.selectElement Js.t) longitude_field latitude_field lowest_field highest_field distance_field =
+let update_altitude altitude_field observer_field distance_field lowest_field highest_field =
+  let ho = read_float_from_field observer_field and
+      hm = read_float_from_field altitude_field and
+      dist = read_float_from_field distance_field in
+  let altitude = Apparent.apparent_height ho hm dist 6371000. in
+  let avg_sun_size = 0.52 in
+  write_value (altitude -. (avg_sun_size /. 2.)) lowest_field;
+  write_value (altitude +. (avg_sun_size /. 2.)) highest_field
+
+let setup_presets (preset_field : Dom_html.selectElement Js.t) longitude_field latitude_field altitude_field observer_field lowest_field highest_field distance_field =
   let document = Dom_html.document in
   List.iter (fun preset ->
       let option = Dom_html.createOption document in
@@ -42,10 +55,11 @@ let setup_presets (preset_field : Dom_html.selectElement Js.t) longitude_field l
               let* preset = List.nth_opt presets idx in
               write_value preset.longitude longitude_field;
               write_value preset.latitude latitude_field;
-              write_value preset.lowest lowest_field;
-              write_value preset.highest highest_field;
+              write_value preset.target_altitude altitude_field;
+              write_value preset.observer_altitude observer_field;
               write_value preset.distance distance_field;
               update_pin preset.latitude preset.longitude;
+              update_altitude altitude_field observer_field distance_field lowest_field highest_field;
               None
           end;
         Js._true)
@@ -58,14 +72,11 @@ let setup_today today_button date_field =
         date_field##.value := Js.string today;
         Js._true)
 
-let reset_preset_index preset_field _evt =
-  preset_field##.selectedIndex := 0;
-  Js._true
+let reset_preset_index preset_field =
+  preset_field##.selectedIndex := 0
 
-let read_and_update_pin preset_field longitude_field latitude_field evt =
-  ignore @@ reset_preset_index preset_field evt;
-  let read_float_from_field field =
-    Js.(to_float @@ parseFloat field##.value) in
+let read_and_update_pin preset_field longitude_field latitude_field _evt =
+  reset_preset_index preset_field;
   let lat = read_float_from_field latitude_field and
       lng = read_float_from_field longitude_field in
   update_pin lat lng;
@@ -104,17 +115,22 @@ let () =
     let* date_field = get_field "date" in
     let* longitude_field = get_field "longitude" in
     let* latitude_field = get_field "latitude" in
+    let* altitude_field = get_field "altitude" in
+    let* observer_field = get_field "observer" in
     let* lowest_field = get_field "lowest" in
     let* highest_field = get_field "highest" in
     let* distance_field = get_field "distance" in
     let* pin_check = get_field "pin" in
-    setup_presets preset_field longitude_field latitude_field lowest_field highest_field distance_field;
+    setup_presets preset_field longitude_field latitude_field altitude_field observer_field lowest_field highest_field distance_field;
     setup_today today_button date_field;
+    let update_altitude _evt =
+      update_altitude altitude_field observer_field distance_field lowest_field highest_field;
+      Js._true in
     longitude_field##.onchange := Dom_html.handler (read_and_update_pin preset_field longitude_field latitude_field);
     latitude_field##.onchange := Dom_html.handler (read_and_update_pin preset_field longitude_field latitude_field);
-    lowest_field##.onchange := Dom_html.handler (reset_preset_index preset_field);
-    highest_field##.onchange := Dom_html.handler (reset_preset_index preset_field);
-    distance_field##.onchange := Dom_html.handler (reset_preset_index preset_field);
+    altitude_field##.onchange := Dom_html.handler (fun _evt -> reset_preset_index preset_field; update_altitude ());
+    observer_field##.onchange := Dom_html.handler update_altitude;
+    distance_field##.onchange := Dom_html.handler update_altitude;
     Js.export "alignment"
       (object%js
          method find = alignment_find
