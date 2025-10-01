@@ -91,7 +91,7 @@ let solar jd =
   let epsilon0 = obliquity t in
   let epsilon = epsilon0 +. 0.00256 *. (dcos omega) in (* 24.8 *)
 
-  let ra = Float.atan2 ((dcos epsilon) *. (dsin lm)) (dcos lm) in
+  let ra = Float.atan2 ((dcos epsilon) *. (dsin lm)) (dcos lm) in (* 24.6 *)
   let dec = Float.asin ((dsin epsilon) *. (dsin lm)) in (* 24.7 *)
 
   { ra = (rad2deg ra) %. 360.; dec = (rad2deg dec) %. 360. }
