@@ -1,10 +1,10 @@
 (* (C) 2025 Alban Gruin, released under LGPL 3 *)
 
 let deg2rad d =
-  (d /. 360.) *. (2. *. Float.pi)
+  (d /. 180.) *. Float.pi
 
 let rad2deg r =
-  (r /. (2. *. Float.pi)) *. 360.
+  (r /. Float.pi) *. 180.
 
 let dtrigo trig d = deg2rad d |> trig
 let dsin = dtrigo Float.sin
