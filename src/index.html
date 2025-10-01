@@ -61,7 +61,7 @@ form {
             <input type="number" name="observer" id="observer" step="1" required /><br />
           </div>
           <div>
-            <label for="distance">Distance (m)</label>
+            <label for="distance">Distance (km)</label>
             <input type="number" name="distance" id="distance" required /><br />
          </div>
          <div>
@@ -139,7 +139,7 @@ form {
 
           var found = alignment.find(
               date.valueAsDate, lat, lng,
-              lowest.valueAsNumber, highest.valueAsNumber, distance.valueAsNumber);
+              lowest.valueAsNumber, highest.valueAsNumber, 1000 * distance.valueAsNumber);
 
           var lines = found.map((entry) => {
               var lat2 = entry[3][1];

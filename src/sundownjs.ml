@@ -15,7 +15,7 @@ type preset = {
 let presets = [
     {name = "Pic du Midi de Bigorre";
      longitude = 0.141277; latitude = 42.937056; target_altitude = 2877.;
-     observer_altitude = 200.; distance = 150000.}
+     observer_altitude = 200.; distance = 150.}
   ]
 
 let (let*) = Option.bind
@@ -35,7 +35,7 @@ let write_value value field =
 let update_altitude altitude_field observer_field distance_field lowest_field highest_field =
   let ho = read_float_from_field observer_field and
       hm = read_float_from_field altitude_field and
-      dist = read_float_from_field distance_field in
+      dist = 1000. *. read_float_from_field distance_field in
   let altitude = Apparent.apparent_height ho hm dist 6371000. in
   let avg_sun_size = 0.52 in
   write_value (altitude -. (avg_sun_size /. 2.)) lowest_field;
