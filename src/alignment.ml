@@ -9,6 +9,13 @@ let j2000 jd =
   (* Astronomical Algorithms, Jean Meeus, Formule 24.1 *)
   (jd -. 2451545.) /. 36525.
 
+let obliquity t =
+  (* Astronomical Algorithms, Jean Meeus, Formule 21.2 *)
+  (subdeg 23. 26. 21.448) +.
+    t *. (-.(subdeg 0. 0. 46.8150) +.
+            t *. (-.(subdeg 0. 0. 0.00059) +.
+                    t *. subdeg 0. 0. 0.001813))
+
 let nutation dt =
   (* Astronomical Algorithms, Jean Meeus, Chapitre 21, méthode basse fidélité *)
   let jd = Calendar.to_jd dt in
@@ -24,8 +31,7 @@ let nutation dt =
   let delta_epsilon = (subdeg 0. 0. 9.20) *. (dcos omega) +. (subdeg 0. 0. 0.57) *. (dcos 2. *. lsun) +.
                         (subdeg 0. 0. 0.1) *. (dcos 2. *. lmoon) -. (subdeg 0. 0. 0.09) *. (dcos 2. *. omega) in
 
-  let epsilon0 = (subdeg 23. 26. 21.448) -. (subdeg 0. 0. 46.8150) *. t -.
-                    (subdeg 0. 0. 0.00059) *. (t ** 2.) +. (subdeg 0. 0. 0.001813) *. (t ** 3.) in (* 21.2 *)
+  let epsilon0 = obliquity t in
   let epsilon = epsilon0 +. delta_epsilon in
 
   delta_psi, epsilon
@@ -82,10 +88,7 @@ let solar jd =
   let omega = 125.04 -. 1934.136 *. t in
   let lm = theta -. 0.00569 -. 0.00478 *. (dsin omega) in
 
-  let epsilon0 = (subdeg 23. 26. 21.448) -.
-                   (subdeg 0. 0. 46.8150) *. t -.
-                   (subdeg 0. 0. 0.00059) *. (t ** 2.) +.
-                   (subdeg 0. 0. 0.001813) *. (t ** 3.) in (* 21.2 *)
+  let epsilon0 = obliquity t in
   let epsilon = epsilon0 +. 0.00256 *. (dcos omega) in (* 24.8 *)
 
   let ra = Float.atan2 ((dcos epsilon) *. (dsin lm)) (dcos lm) in
