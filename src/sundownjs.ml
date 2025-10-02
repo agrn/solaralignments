@@ -18,7 +18,10 @@ let presets = [
      observer_altitude = 200.; distance = 150.}
   ]
 
-let (let*) = Option.bind
+let (let*) v f =
+  match v with
+  | None -> ()
+  | Some v -> f v
 
 let get_field id = Dom_html.(getElementById_coerce id CoerceTo.input)
 
@@ -57,16 +60,14 @@ let setup_presets (preset_field : Dom_html.selectElement Js.t) longitude_field l
     Dom_html.handler (fun _ ->
         let idx = preset_field##.selectedIndex - 1 in
         if idx >= 0 then begin
-            ignore @@
-              let* preset = List.nth_opt presets idx in
-              write_value preset.longitude longitude_field;
-              write_value preset.latitude latitude_field;
-              write_value preset.target_altitude altitude_field;
-              write_value preset.observer_altitude observer_field;
-              write_value preset.distance distance_field;
-              update_pin preset.latitude preset.longitude;
-              update_altitude altitude_field observer_field distance_field lowest_field highest_field;
-              None
+            let* preset = List.nth_opt presets idx in
+            write_value preset.longitude longitude_field;
+            write_value preset.latitude latitude_field;
+            write_value preset.target_altitude altitude_field;
+            write_value preset.observer_altitude observer_field;
+            write_value preset.distance distance_field;
+            update_pin preset.latitude preset.longitude;
+            update_altitude altitude_field observer_field distance_field lowest_field highest_field
           end;
         Js._true)
 
@@ -122,35 +123,33 @@ let form_submit date_field longitude_field latitude_field lowest_field highest_f
   Js._false
 
 let setup () =
-  ignore @@
-    let* form = Dom_html.(getElementById_coerce "form" CoerceTo.form) in
-    let* preset_field = Dom_html.(getElementById_coerce "preset" CoerceTo.select) in
-    let* today_button = Dom_html.(getElementById_coerce "today" CoerceTo.button) in
-    let* date_field = get_field "date" in
-    let* longitude_field = get_field "longitude" in
-    let* latitude_field = get_field "latitude" in
-    let* altitude_field = get_field "altitude" in
-    let* observer_field = get_field "observer" in
-    let* lowest_field = get_field "lowest" in
-    let* highest_field = get_field "highest" in
-    let* distance_field = get_field "distance" in
-    let* pin_check = get_field "pin" in
-    setup_presets preset_field longitude_field latitude_field altitude_field observer_field lowest_field highest_field distance_field;
-    setup_today today_button date_field;
-    let update_altitude _evt =
-      update_altitude altitude_field observer_field distance_field lowest_field highest_field;
-      Js._true in
-    form##.onsubmit := Dom_html.handler (form_submit date_field longitude_field latitude_field lowest_field highest_field distance_field pin_check);
-    longitude_field##.onchange := Dom_html.handler (read_and_update_pin preset_field longitude_field latitude_field);
-    latitude_field##.onchange := Dom_html.handler (read_and_update_pin preset_field longitude_field latitude_field);
-    altitude_field##.onchange := Dom_html.handler (fun _evt -> reset_preset_index preset_field; update_altitude ());
-    observer_field##.onchange := Dom_html.handler update_altitude;
-    distance_field##.onchange := Dom_html.handler update_altitude;
-    Js.export "alignment"
-      (object%js
-         method handleMapClickEvent = handle_map_click_event pin_check preset_field longitude_field latitude_field
-       end);
-    None
+  let* form = Dom_html.(getElementById_coerce "form" CoerceTo.form) in
+  let* preset_field = Dom_html.(getElementById_coerce "preset" CoerceTo.select) in
+  let* today_button = Dom_html.(getElementById_coerce "today" CoerceTo.button) in
+  let* date_field = get_field "date" in
+  let* longitude_field = get_field "longitude" in
+  let* latitude_field = get_field "latitude" in
+  let* altitude_field = get_field "altitude" in
+  let* observer_field = get_field "observer" in
+  let* lowest_field = get_field "lowest" in
+  let* highest_field = get_field "highest" in
+  let* distance_field = get_field "distance" in
+  let* pin_check = get_field "pin" in
+  setup_presets preset_field longitude_field latitude_field altitude_field observer_field lowest_field highest_field distance_field;
+  setup_today today_button date_field;
+  let update_altitude _evt =
+    update_altitude altitude_field observer_field distance_field lowest_field highest_field;
+    Js._true in
+  form##.onsubmit := Dom_html.handler (form_submit date_field longitude_field latitude_field lowest_field highest_field distance_field pin_check);
+  longitude_field##.onchange := Dom_html.handler (read_and_update_pin preset_field longitude_field latitude_field);
+  latitude_field##.onchange := Dom_html.handler (read_and_update_pin preset_field longitude_field latitude_field);
+  altitude_field##.onchange := Dom_html.handler (fun _evt -> reset_preset_index preset_field; update_altitude ());
+  observer_field##.onchange := Dom_html.handler update_altitude;
+  distance_field##.onchange := Dom_html.handler update_altitude;
+  Js.export "alignment"
+    (object%js
+       method handleMapClickEvent = handle_map_click_event pin_check preset_field longitude_field latitude_field
+     end)
 
 let () =
   Js.export "sundownjs"
