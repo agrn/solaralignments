@@ -22,8 +22,14 @@ let (let*) = Option.bind
 
 let get_field id = Dom_html.(getElementById_coerce id CoerceTo.input)
 
-let update_pin (lat : float) (lng : float) =
-  ignore @@ Js.Unsafe.fun_call (Js.Unsafe.js_expr "updatePin") [|Js.Unsafe.inject lat; Js.Unsafe.inject lng|]
+let update_pin lat lng =
+  ignore @@ Js.Unsafe.(fun_call (js_expr "updatePin") [|inject lat; inject lng|])
+
+let no_alignments_found () =
+  ignore @@ Js.Unsafe.(fun_call (js_expr "noAlignmentsFound") [||])
+
+let display_alignments lat lng found =
+  ignore @@ Js.Unsafe.(fun_call (js_expr "displayAlignments") [|inject lat; inject lng; inject found|])
 
 let read_float_from_field field =
   Js.(to_float @@ parseFloat field##.value)
@@ -91,20 +97,33 @@ let handle_map_click_event pin_check preset_field longitude_field latitude_field
       pin_check##.checked := Js._false
     end
 
-let alignment_find date latitude longitude lowest highest distance =
+let form_submit date_field longitude_field latitude_field lowest_field highest_field distance_field pin_check evt =
+  Dom.preventDefault evt;
+  let date = new%js Js.date_fromTimeValue (Js.date##parse (date_field##.value)) and
+      lat = read_float_from_field latitude_field and
+      lng = read_float_from_field longitude_field and
+      lowest = read_float_from_field lowest_field and
+      highest = read_float_from_field highest_field and
+      distance = 1000. *. read_float_from_field distance_field in
+  update_pin lat lng;
+  pin_check##.checked := Js._false;
   let date = Date.make (date##getFullYear) (date##getMonth + 1) (date##getDate) in
-  match Alignment.find date longitude latitude lowest highest distance with
-  | None -> Js.Optdef.empty
-  | Some l ->
-     List.map (fun (dt, pos, coords) ->
-         Calendar.(new%js Js.date_min (year dt) (Date.int_of_month (month dt)) (day_of_month dt) (hour dt) (minute dt)),
-         pos, coords) l
-     |> Array.of_list
-     |> Js.array
-     |> Js.Optdef.return
+  begin
+    match Alignment.find date lng lat lowest highest distance with
+    | None -> no_alignments_found ()
+    | Some l ->
+       List.map (fun (dt, pos, coords) ->
+           Calendar.(new%js Js.date_min (year dt) (Date.int_of_month (month dt)) (day_of_month dt) (hour dt) (minute dt)),
+           pos, coords) l
+       |> Array.of_list
+       |> Js.array
+       |> display_alignments lat lng
+  end;
+  Js._false
 
-let () =
+let setup () =
   ignore @@
+    let* form = Dom_html.(getElementById_coerce "form" CoerceTo.form) in
     let* preset_field = Dom_html.(getElementById_coerce "preset" CoerceTo.select) in
     let* today_button = Dom_html.(getElementById_coerce "today" CoerceTo.button) in
     let* date_field = get_field "date" in
@@ -121,6 +140,7 @@ let () =
     let update_altitude _evt =
       update_altitude altitude_field observer_field distance_field lowest_field highest_field;
       Js._true in
+    form##.onsubmit := Dom_html.handler (form_submit date_field longitude_field latitude_field lowest_field highest_field distance_field pin_check);
     longitude_field##.onchange := Dom_html.handler (read_and_update_pin preset_field longitude_field latitude_field);
     latitude_field##.onchange := Dom_html.handler (read_and_update_pin preset_field longitude_field latitude_field);
     altitude_field##.onchange := Dom_html.handler (fun _evt -> reset_preset_index preset_field; update_altitude ());
@@ -128,7 +148,12 @@ let () =
     distance_field##.onchange := Dom_html.handler update_altitude;
     Js.export "alignment"
       (object%js
-         method find = alignment_find
          method handleMapClickEvent = handle_map_click_event pin_check preset_field longitude_field latitude_field
        end);
     None
+
+let () =
+  Js.export "sundownjs"
+    (object%js
+       method setup = setup
+     end)

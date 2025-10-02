@@ -6,6 +6,7 @@
     <title>Solar alignments</title>
     <link rel="stylesheet" href="leaflet/leaflet.css" />
     <script src="leaflet/leaflet.js"></script>
+    <script src="sundownjs.bc.js"></script>
     <style>
 html, body {
     margin: 0;
@@ -110,15 +111,6 @@ form {
       var linesGroup = L.layerGroup().addTo(map);
       var pinGroup = L.layerGroup().addTo(map);
 
-      var date = document.getElementById("date");
-      var longitude = document.getElementById("longitude");
-      var latitude = document.getElementById("latitude");
-      var altitude = document.getElementById("altitude");
-      var lowest = document.getElementById("lowest");
-      var highest = document.getElementById("highest");
-      var distance = document.getElementById("distance");
-
-      var pin = document.getElementById("pin");
       var saved_loc = null;
 
       function updatePin(lat, lng) {
@@ -126,20 +118,13 @@ form {
           L.marker([lat, lng]).addTo(pinGroup);
       }
 
-      document.getElementById("form").onsubmit = function(e) {
-          e.preventDefault();
-
+      function noAlignmentsFound() {
           linesGroup.clearLayers();
+          alert("No alignments found (no sunrise or sunset at the given date)");
+      }
 
-          var lat = latitude.valueAsNumber;
-          var lng = longitude.valueAsNumber;
-
-          pin.checked = false;
-          updatePin(lat, lng);
-
-          var found = alignment.find(
-              date.valueAsDate, lat, lng,
-              lowest.valueAsNumber, highest.valueAsNumber, 1000 * distance.valueAsNumber);
+      function displayAlignments(lat, lng, found) {
+          linesGroup.clearLayers();
 
           var lines = found.map((entry) => {
               var lat2 = entry[3][1];
@@ -154,15 +139,14 @@ form {
               map.fitBounds(lines[0].getBounds());
               saved_loc = (lat, lng);
           }
-
-          return false;
       }
 
       map.on('click', (e) => {
           alignment.handleMapClickEvent(e.latlng.lat, e.latlng.lng);
           return true;
       });
+
+      sundownjs.setup({});
     </script>
-    <script src="sundownjs.bc.js"></script>
   </body>
 </html>
