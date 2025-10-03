@@ -25,14 +25,18 @@ let (let*) v f =
 
 let get_field id = Dom_html.(getElementById_coerce id CoerceTo.input)
 
-let update_pin lat lng =
+let update_pin (lat : float) (lng : float) =
   ignore @@ Js.Unsafe.(fun_call (js_expr "updatePin") [|inject lat; inject lng|])
 
-let no_alignments_found () =
-  ignore @@ Js.Unsafe.(fun_call (js_expr "noAlignmentsFound") [||])
-
-let display_alignments lat lng found =
-  ignore @@ Js.Unsafe.(fun_call (js_expr "displayAlignments") [|inject lat; inject lng; inject found|])
+let display_alignments (lat : float) (lng : float) = function
+  | None -> ignore @@ Js.Unsafe.(fun_call (js_expr "noAlignmentsFound") [||])
+  | Some l ->
+     let found = List.map (fun (dt, pos, coords) ->
+                     Calendar.(new%js Js.date_min (year dt) (Date.int_of_month (month dt)) (day_of_month dt) (hour dt) (minute dt)),
+                     pos, coords) l
+                 |> Array.of_list
+                 |> Js.array in
+     ignore @@ Js.Unsafe.(fun_call (js_expr "displayAlignments") [|inject lat; inject lng; inject found|])
 
 let read_float_from_field field =
   Js.(to_float @@ parseFloat field##.value)
@@ -109,17 +113,7 @@ let form_submit date_field longitude_field latitude_field lowest_field highest_f
   update_pin lat lng;
   pin_check##.checked := Js._false;
   let date = Date.make (date##getFullYear) (date##getMonth + 1) (date##getDate) in
-  begin
-    match Alignment.find date lng lat lowest highest distance with
-    | None -> no_alignments_found ()
-    | Some l ->
-       List.map (fun (dt, pos, coords) ->
-           Calendar.(new%js Js.date_min (year dt) (Date.int_of_month (month dt)) (day_of_month dt) (hour dt) (minute dt)),
-           pos, coords) l
-       |> Array.of_list
-       |> Js.array
-       |> display_alignments lat lng
-  end;
+  display_alignments lat lng @@ Alignment.find date lng lat lowest highest distance;
   Js._false
 
 let setup () =
