@@ -17,6 +17,7 @@ module Geodesic = struct
   let wgs84 = make 6378137. (1. /. 298.25722356)
 end
 
+(* https://www.ngs.noaa.gov/PUBS_LIB/inverse.pdf *)
 let direct geodesic latitude longitude bearing distance =
   let a, f = geodesic.axis, geodesic.flattening in
   let b = a *. (1. -. f) in
@@ -66,7 +67,7 @@ let direct geodesic latitude longitude bearing distance =
 
          let phi2 =
            atan2 (sinU *. cosSigma +. cosU *. sinSigma *. (cos bearing))
-             ((1. -. f) *. sqrt((sinAlpha ** 2.) +. (pow (sinU *. sinSigma -. cosU *. cosSigma *. (cos bearing)) 2.))) and
+             ((1. -. f) *. sqrt ((sinAlpha ** 2.) +. (pow (sinU *. sinSigma -. cosU *. cosSigma *. (cos bearing)) 2.))) and
 
              lambda = atan2 (sinSigma *. (sin bearing)) (cosU *. cosSigma -. sinU *. sinSigma *. (cos bearing)) and
              c = (f /. 16.) *. cosAlpha *. (4. +. f *. (4. -. 3. *. cosAlpha)) in
