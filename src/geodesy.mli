@@ -1,11 +1,8 @@
 (* (C) 2025 Alban Gruin, released under LGPL 3 *)
 
-module Geodesic : sig
-  type t
+type ellipsoid
 
-  val make : float -> float -> t
-  val wgs84 : t
-end
+val wgs84 : ellipsoid
 
-val direct : Geodesic.t -> float -> float -> float -> float -> (float * float * float) option
-val inverse : Geodesic.t -> float -> float -> float -> float -> (float * float * float) option
+val direct : ellipsoid -> float -> float -> float -> float -> (float * float * float) option
+val inverse : ellipsoid -> float -> float -> float -> float -> (float * float * float) option

@@ -4,34 +4,30 @@ open Float
 
 open Helpers
 
-type geodesic = {
+type ellipsoid = {
     axis : float;
     flattening : float
   }
 
-module Geodesic = struct
-  type t = geodesic
+let wgs84 = { axis = 6378137.; flattening = (1. /. 298.25722356) }
 
-  let make axis flattening = { axis; flattening }
+let getSmallB ellipsoid =
+  ellipsoid.axis *. (1. -. ellipsoid.flattening)
 
-  let getSmallB geodesic =
-    geodesic.axis *. (1. -. geodesic.flattening)
-
-  let getABC geodesic cosAlpha =
-    let b = getSmallB geodesic in
-    let uSquared = cosAlpha *. ((geodesic.axis *. geodesic.axis -. b *. b) /. (b *. b)) in
-
-    let a = 1. +. (uSquared /. 16384.) *. (4096. +. uSquared *. (-768. +. uSquared *. (320. -. 175. *. uSquared))) and
-        b = (uSquared /. 1024.) *. (256. +. uSquared *. (-128. +. uSquared *. (74. -. 47. *. uSquared))) and
-        c = (geodesic.flattening /. 16.) *. cosAlpha *. (4. +. geodesic.flattening *. (4. -. 3. *. cosAlpha)) in
-    a, b, c
-
-  let wgs84 = make 6378137. (1. /. 298.25722356)
-end
-
+(* Implementation of Vincenty'd direct and inverse formulae. *)
 (* https://www.ngs.noaa.gov/PUBS_LIB/inverse.pdf *)
-let reduced_latitude geodesic latitude =
-  let tanU = (1. -. geodesic.flattening) *. tan latitude in
+
+let getABC ellipsoid cosAlpha =
+  let b = getSmallB ellipsoid in
+  let uSquared = cosAlpha *. ((ellipsoid.axis *. ellipsoid.axis -. b *. b) /. (b *. b)) in
+
+  let a = 1. +. (uSquared /. 16384.) *. (4096. +. uSquared *. (-768. +. uSquared *. (320. -. 175. *. uSquared))) and
+      b = (uSquared /. 1024.) *. (256. +. uSquared *. (-128. +. uSquared *. (74. -. 47. *. uSquared))) and
+      c = (ellipsoid.flattening /. 16.) *. cosAlpha *. (4. +. ellipsoid.flattening *. (4. -. 3. *. cosAlpha)) in
+  a, b, c
+
+let reduced_latitude ellipsoid latitude =
+  let tanU = (1. -. ellipsoid.flattening) *. tan latitude in
   tanU, atan tanU
 
 let latitude_remainder c f sinAlpha sigma sinSigma cosSigma cos2sigmaM =
@@ -45,15 +41,15 @@ let delta_sigma bB sigma cos2sigmaM =
                                           (-3. +. 4. *. (pow (sin sigma) 2.)) *.
                                             (-3. +. 4. *. (pow (cos2sigmaM) 2.)))))
 
-let direct geodesic latitude longitude bearing distance =
-  let f = geodesic.flattening in
-  let b = Geodesic.getSmallB geodesic in
+let direct ellipsoid latitude longitude bearing distance =
+  let f = ellipsoid.flattening in
+  let b = getSmallB ellipsoid in
 
   let latitude = deg2rad latitude and
       longitude = deg2rad longitude and
       bearing = deg2rad bearing in
 
-  let tanU, u = reduced_latitude geodesic latitude in
+  let tanU, u = reduced_latitude ellipsoid latitude in
   let sinU = sin u and
       cosU = cos u in
 
@@ -62,7 +58,7 @@ let direct geodesic latitude longitude bearing distance =
 
   let sigma1 = atan2 tanU (cos bearing) in
 
-  let bA, bB, c = Geodesic.getABC geodesic cosAlpha in
+  let bA, bB, c = getABC ellipsoid cosAlpha in
 
   let baseSigma = distance /. (b *. bA) in
 
@@ -93,9 +89,9 @@ let direct geodesic latitude longitude bearing distance =
 
          rad2deg phi2, rad2deg (longitude +. l), rad2deg alpha2)
 
-let inverse geodesic lat1 long1 lat2 long2 =
-  let f = geodesic.flattening in
-  let b = Geodesic.getSmallB geodesic in
+let inverse ellipsoid lat1 long1 lat2 long2 =
+  let f = ellipsoid.flattening in
+  let b = getSmallB ellipsoid in
 
   let lat1 = deg2rad lat1 and
       long1 = deg2rad long1 and
@@ -103,8 +99,8 @@ let inverse geodesic lat1 long1 lat2 long2 =
       long2 = deg2rad long2 in
 
   let l = long2 -. long1 in
-  let _, u1 = reduced_latitude geodesic lat1 and
-      _, u2 = reduced_latitude geodesic lat2 in
+  let _, u1 = reduced_latitude ellipsoid lat1 and
+      _, u2 = reduced_latitude ellipsoid lat2 in
 
   let rec converge delta lambda para cnt =
     if delta > 1.0e-12 && cnt < 50 then
@@ -116,7 +112,7 @@ let inverse geodesic lat1 long1 lat2 long2 =
       let sinAlpha = (cos u1 *. cos u2 *. sin lambda) /. sinSigma in
       let cos2alpha = 1. -. sinAlpha *. sinAlpha in
       let cos2sigmaM = cosSigma -. (2. *. sin u1 *. sin u2) /. cos2alpha in
-      let bA, bB, c = Geodesic.getABC geodesic cos2alpha in
+      let bA, bB, c = getABC ellipsoid cos2alpha in
       let lambda' = l +. latitude_remainder c f sinAlpha sigma sinSigma cosSigma cos2sigmaM in
       let delta = abs (lambda' -. lambda) in
       converge delta lambda' (bA, bB, sigma, cos2sigmaM) (cnt + 1)
