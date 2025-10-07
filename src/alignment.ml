@@ -47,7 +47,7 @@ let sidereal_time ?(add_nutation=false) dt =
       0., 0. in
   let theta0 =
     (280.46061837 +. 360.98564736629 *. (jd -. 2451545.) +.
-       0.000387933 *. (t ** 2.) -. ((t ** 3.) /. 38710000.)) (* 11.4 *)
+       (t *. t) *. (0.000387933 -. t /. 38710000.)) (* 11.4 *)
       (* Add nutation *) +. delta_psi *. dcos epsilon in
   theta0 %. 360.
 
