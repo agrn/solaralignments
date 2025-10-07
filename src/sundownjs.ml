@@ -41,6 +41,12 @@ let display_alignments (lat : float) (lng : float) = function
 let read_float_from_field field =
   Js.(to_float @@ parseFloat field##.value)
 
+let is_checked field =
+  Js.to_bool field##.checked
+
+let uncheck field =
+  field##.checked := Js._false
+
 let write_value value field =
   let num = Js.number_of_float value in
   field##.value := num##toString
@@ -93,16 +99,24 @@ let read_and_update_pin preset_field longitude_field latitude_field _evt =
   update_pin lat lng;
   Js._true
 
-let handle_map_click_event pin_check preset_field longitude_field latitude_field lat lng =
-  if Js.to_bool pin_check##.checked then begin
+let handle_map_click_event pin_radio distance_radio preset_field longitude_field latitude_field distance_field lat lng =
+  if is_checked pin_radio then begin
       write_value lat latitude_field;
       write_value lng longitude_field;
       preset_field##.selectedIndex := 0;
       update_pin lat lng;
-      pin_check##.checked := Js._false
+      uncheck pin_radio
+    end
+  else if is_checked distance_radio then begin
+      let lat1 = read_float_from_field latitude_field and
+          long1 = read_float_from_field longitude_field in
+      Vincenty.(inverse Geodesic.wgs84 lat1 long1 lat lng)
+      |> Option.iter (fun (distance, _, _) ->
+             write_value (Float.ceil (distance /. 1000.)) distance_field);
+      uncheck distance_radio
     end
 
-let form_submit date_field longitude_field latitude_field lowest_field highest_field distance_field pin_check evt =
+let form_submit date_field longitude_field latitude_field lowest_field highest_field distance_field pin_radio distance_radio evt =
   Dom.preventDefault evt;
   let date = new%js Js.date_fromTimeValue (Js.date##parse (date_field##.value)) and
       lat = read_float_from_field latitude_field and
@@ -111,7 +125,8 @@ let form_submit date_field longitude_field latitude_field lowest_field highest_f
       highest = read_float_from_field highest_field and
       distance = 1000. *. read_float_from_field distance_field in
   update_pin lat lng;
-  pin_check##.checked := Js._false;
+  uncheck pin_radio;
+  uncheck distance_radio;
   let date = Date.make (date##getFullYear) (date##getMonth + 1) (date##getDate) in
   display_alignments lat lng @@ Alignment.find date lng lat lowest highest distance;
   Js._false
@@ -128,13 +143,14 @@ let setup () =
   let* lowest_field = get_field "lowest" in
   let* highest_field = get_field "highest" in
   let* distance_field = get_field "distance" in
-  let* pin_check = get_field "pin" in
+  let* pin_radio = get_field "pin" in
+  let* distance_radio = get_field "pindistance" in
   setup_presets preset_field longitude_field latitude_field altitude_field observer_field lowest_field highest_field distance_field;
   setup_today today_button date_field;
   let update_altitude _evt =
     update_altitude altitude_field observer_field distance_field lowest_field highest_field;
     Js._true in
-  form##.onsubmit := Dom_html.handler (form_submit date_field longitude_field latitude_field lowest_field highest_field distance_field pin_check);
+  form##.onsubmit := Dom_html.handler (form_submit date_field longitude_field latitude_field lowest_field highest_field distance_field pin_radio distance_radio);
   longitude_field##.onchange := Dom_html.handler (read_and_update_pin preset_field longitude_field latitude_field);
   latitude_field##.onchange := Dom_html.handler (read_and_update_pin preset_field longitude_field latitude_field);
   altitude_field##.onchange := Dom_html.handler (fun _evt -> reset_preset_index preset_field; update_altitude ());
@@ -142,7 +158,7 @@ let setup () =
   distance_field##.onchange := Dom_html.handler update_altitude;
   Js.export "alignment"
     (object%js
-       method handleMapClickEvent = handle_map_click_event pin_check preset_field longitude_field latitude_field
+       method handleMapClickEvent = handle_map_click_event pin_radio distance_radio preset_field longitude_field latitude_field distance_field
      end)
 
 let () =

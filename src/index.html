@@ -80,10 +80,12 @@ form {
         </fieldset>
         <div>
           <div>
-            <input type="submit" value="Find alignments" />
-            <input type="checkbox" name="pin" id="pin" />
-            <label for="pin">Select place on the map</label>
+            <input type="radio" name="pin" value="target" id="pin" />
+            <label for="pin">Select target on the map</label>
+            <input type="radio" name="pin" value="distance" id="pindistance" />
+            <label for="pindistance">Select distance on the map</label>
           </div>
+          <input type="submit" value="Find alignments" />
         </div>
       </form>
       <div id="map"></div>
