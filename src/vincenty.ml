@@ -92,3 +92,44 @@ let direct geodesic latitude longitude bearing distance =
              alpha2 = atan2 sinAlpha (-. sinU *. sinSigma +. cosU *. cosSigma *. (cos bearing)) in
 
          rad2deg phi2, rad2deg (longitude +. l), rad2deg alpha2)
+
+let inverse geodesic lat1 long1 lat2 long2 =
+  let f = geodesic.flattening in
+  let b = Geodesic.getSmallB geodesic in
+
+  let lat1 = deg2rad lat1 and
+      long1 = deg2rad long1 and
+      lat2 = deg2rad lat2 and
+      long2 = deg2rad long2 in
+
+  let l = long2 -. long1 in
+  let _, u1 = reduced_latitude geodesic lat1 and
+      _, u2 = reduced_latitude geodesic lat2 in
+
+  let rec converge delta lambda para cnt =
+    if delta > 1.0e-12 && cnt < 50 then
+      let sinSigma = pow (cos u2 *. sin lambda) 2. +.
+                       pow (cos u1 *. sin u2 -. sin u1 *. cos u2 *. cos lambda) 2. |> sqrt in
+      let cosSigma = sin u1 *. sin u2 +. cos u1 *. cos u2 *. cos lambda in
+      let sigma = atan2 sinSigma cosSigma in
+      (* let tanSigma = sin sigma /. cos sigma in *)
+      let sinAlpha = (cos u1 *. cos u2 *. sin lambda) /. sinSigma in
+      let cos2alpha = 1. -. sinAlpha *. sinAlpha in
+      let cos2sigmaM = cosSigma -. (2. *. sin u1 *. sin u2) /. cos2alpha in
+      let bA, bB, c = Geodesic.getABC geodesic cos2alpha in
+      let lambda' = l +. latitude_remainder c f sinAlpha sigma sinSigma cosSigma cos2sigmaM in
+      let delta = abs (lambda' -. lambda) in
+      converge delta lambda' (bA, bB, sigma, cos2sigmaM) (cnt + 1)
+    else if delta > 1.0e-12 then
+      None
+    else
+      Some (lambda, para)  in
+
+  converge infinity l (0., 0., 0., 0.) 0
+  |> Option.map (fun (lambda, (bA, bB, sigma, cos2sigmaM)) ->
+         (* let sigma = atan (sinSigma /. cosSigma) in *)
+         let deltaSigma = delta_sigma bB sigma cos2sigmaM in
+         let s = b *. bA *. (sigma -. deltaSigma) in
+         let alpha1 = atan2 (cos u2 *. sin lambda) (cos u1 *. sin u2 -. sin u1 *. cos u2 *. cos lambda) in
+         let alpha2 = atan2 (cos u1 *. sin lambda) (cos u1 *. sin u2 *. cos lambda -. sin u1 *. cos u2) in
+         s, rad2deg alpha1, rad2deg alpha2)

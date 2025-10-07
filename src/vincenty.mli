@@ -8,3 +8,4 @@ module Geodesic : sig
 end
 
 val direct : Geodesic.t -> float -> float -> float -> float -> (float * float * float) option
+val inverse : Geodesic.t -> float -> float -> float -> float -> (float * float * float) option
