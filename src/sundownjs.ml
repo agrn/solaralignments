@@ -110,7 +110,7 @@ let handle_map_click_event pin_radio distance_radio preset_field longitude_field
   else if is_checked distance_radio then begin
       let lat1 = read_float_from_field latitude_field and
           long1 = read_float_from_field longitude_field in
-      Vincenty.(inverse Geodesic.wgs84 lat1 long1 lat lng)
+      Geodesy.(inverse Geodesic.wgs84 lat1 long1 lat lng)
       |> Option.iter (fun (distance, _, _) ->
              write_value (Float.ceil (distance /. 1000.)) distance_field);
       uncheck distance_radio

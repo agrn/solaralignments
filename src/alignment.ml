@@ -127,7 +127,7 @@ let find day longitude latitude lowest highest distance =
                   let solar_coordinates = solar @@ Calendar.to_jd dt in
                   let sun_at_target = horizontal_of_equatorial dt (-. longitude) latitude solar_coordinates in
                   let bearing = (sun_at_target.az +. 180.) %. 360. in
-                  match Vincenty.(direct Geodesic.wgs84 latitude longitude bearing distance) with
+                  match Geodesy.(direct Geodesic.wgs84 latitude longitude bearing distance) with
                   | None -> None
                   | Some ((o_lat, o_long, _) as coordinates) ->
                      let true_sun_at_obs = horizontal_of_equatorial dt (-. o_long) o_lat solar_coordinates in
