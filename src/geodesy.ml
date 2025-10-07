@@ -108,7 +108,6 @@ let inverse ellipsoid lat1 long1 lat2 long2 =
                        pow (cos u1 *. sin u2 -. sin u1 *. cos u2 *. cos lambda) 2. |> sqrt in
       let cosSigma = sin u1 *. sin u2 +. cos u1 *. cos u2 *. cos lambda in
       let sigma = atan2 sinSigma cosSigma in
-      (* let tanSigma = sin sigma /. cos sigma in *)
       let sinAlpha = (cos u1 *. cos u2 *. sin lambda) /. sinSigma in
       let cos2alpha = 1. -. sinAlpha *. sinAlpha in
       let cos2sigmaM = cosSigma -. (2. *. sin u1 *. sin u2) /. cos2alpha in
@@ -123,7 +122,6 @@ let inverse ellipsoid lat1 long1 lat2 long2 =
 
   converge infinity l (0., 0., 0., 0.) 0
   |> Option.map (fun (lambda, (bA, bB, sigma, cos2sigmaM)) ->
-         (* let sigma = atan (sinSigma /. cosSigma) in *)
          let deltaSigma = delta_sigma bB sigma cos2sigmaM in
          let s = b *. bA *. (sigma -. deltaSigma) in
          let alpha1 = atan2 (cos u2 *. sin lambda) (cos u1 *. sin u2 -. sin u1 *. cos u2 *. cos lambda) in
