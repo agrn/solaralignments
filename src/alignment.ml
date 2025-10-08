@@ -108,23 +108,45 @@ let solar jd =
 
   { ra = (rad2deg ra) %. 360.; dec = (rad2deg dec) %. 360. }
 
-let sunset ?(add_nutation=false) date longitude latitude =
+let compute_rts fn correction date longitude latitude =
   (* Calcul de l'heure du coucher du soleil, basé sur Astronomical Algorithms, Jean Meeus, Chapitre 14 *)
-  let posd = Calendar.(to_jd @@ from_date date) |> solar in
+  let dt = Calendar.from_date date in
+  let jd = Calendar.to_jd dt in
+  let delta_t = dynamical dt in
+  let jd2 = jd -. delta_t in
+  let posd2 = solar jd2 in
 
-  let h0 = -0.8333 in
-  let theta0 = sidereal_time ~add_nutation (Calendar.from_date date) in
-  let div = (dcos latitude) *. (dcos (posd.dec)) in
+  let stdh = -0.8333 in
+  let theta0 = sidereal_time ~add_nutation:true (Calendar.from_date date) in
+  let div = (dcos latitude) *. (dcos posd2.dec) in
   if Float.abs div <= 1. then
-    let h0 = rad2deg (Float.acos (((dsin h0) -. (dsin latitude) *. (dsin posd.dec)) /. div)) %. 180. in (* 14.1 *)
+    let h0 = rad2deg (Float.acos (((dsin stdh) -. (dsin latitude) *. (dsin posd2.dec)) /. div)) %. 180. in (* 14.1 *)
 
     (* 14.2 *)
-    let m0 = ((posd.ra +. longitude -. theta0) /. 360.) %. 1. in
-    let m2 = ((m0 +. h0 /. 360.) %. 1.) *. 24. in
-    let time = Time.from_hours m2 in
-    Some (Calendar.create date time)
+    let m0 = ((posd2.ra +. longitude -. theta0) /. 360.) %. 1. in
+    let m = (fn h0 m0) %. 1. in
+    let theta = theta0 +. 360.985647 *. m in
+    let jd1 = jd2 -. 1. and
+        jd3 = jd2 +. 1. in
+    let posd1 = solar jd1 and
+        posd3 = solar jd3 in
+    let n = m +. delta_t in (* ΔT is already in days *)
+    let interpolated_coords = {
+        dec = interpolate n posd1.dec posd2.dec posd3.dec;
+        ra = interpolate n posd1.ra posd2.ra posd3.ra
+      } in
+    let hour_angle = local_hour theta longitude interpolated_coords in
+    let alt = rad2deg @@ alt hour_angle latitude interpolated_coords in
+    let delta_m = correction alt stdh interpolated_coords latitude hour_angle in
+    Some (Calendar.create date @@ (Time.from_hours ((m +. delta_m) *. 24.)))
   else
     None
+
+let rise_set_correction alt stdh {dec=dec; _ } latitude local_hour =
+  (alt -. stdh) /. (360. *. dcos dec *. dcos latitude *. dsin local_hour)
+
+let sunset =
+  compute_rts (fun h0 m0 -> m0 +. h0 /. 360. (* 14.2 *)) rise_set_correction
 
 let find day longitude latitude lowest highest distance =
   sunset day (-. longitude) latitude

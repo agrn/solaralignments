@@ -10,3 +10,5 @@ val dtan : float -> float
 val (%.) : float -> float -> float
 
 val subdeg : float -> float -> float -> float
+
+val interpolate : float -> float -> float -> float -> float

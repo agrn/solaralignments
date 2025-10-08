@@ -20,3 +20,10 @@ let (%.) a b =
 
 let subdeg deg minute second =
   (deg +. (minute /. 60.) +. (second /. 3600.)) %. 360.
+
+let interpolate n y1 y2 y3 =
+  (* Interpolation, from Astronomical Algorithms, Jean Meeus, Chapter 3 *)
+  let a = y2 -. y1 and
+      b = y3 -. y2 in
+  let c = b -. a in
+  y2 +. (n /. 2.) *. (a +. b +. n *. c) (* 3.3 *)
