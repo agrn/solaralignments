@@ -9,6 +9,16 @@ let j2000 jd =
   (* Astronomical Algorithms, Jean Meeus, Formule 24.1 *)
   (jd -. 2451545.) /. 36525.
 
+let dynamical dt =
+  (* Dynamical time formulas from https://eclipse.gsfc.nasa.gov/LEcat5/deltatpoly.html *)
+  let y = ((float_of_int Calendar.(year dt + (Date.int_of_month @@ month dt))) -. 0.5) /. 12. in
+  if Calendar.year dt >= 2005 && Calendar.year dt < 2050 then
+    let t = y -. 2000. in
+    let deltaT = 62.92 +. t *. (0.32217 +. t *. 0.005589) in
+    deltaT /. (24. *. 60. *. 60.)
+  else
+    0. (* TODO implement other time periods *)
+
 let obliquity t =
   (* Astronomical Algorithms, Jean Meeus, Formule 21.2 *)
   (subdeg 23. 26. 21.448) +.
@@ -18,7 +28,7 @@ let obliquity t =
 
 let nutation dt =
   (* Astronomical Algorithms, Jean Meeus, Chapitre 21, méthode basse fidélité *)
-  let jd = Calendar.to_jd dt in
+  let jd = Calendar.to_jd dt +. dynamical dt in
   let t = j2000 jd in
 
   let omega = 125.04452 -. 1934.136261 *. t in
