@@ -50,15 +50,16 @@ let sidereal_time ?(add_nutation=false) dt =
   (* Astronomical Algorithms, Jean Meeus, Chapitre 11 *)
   let jd = Calendar.to_jd dt in
   let t = j2000 jd in
-  let delta_psi, epsilon =
+  let nutation =
     if add_nutation then
-      nutation dt
+      let delta_psi, epsilon = nutation dt in
+      delta_psi *. dcos epsilon
     else
-      0., 0. in
+      0. in
   let theta0 =
     (280.46061837 +. 360.98564736629 *. (jd -. 2451545.) +.
        (t *. t) *. (0.000387933 -. t /. 38710000.)) (* 11.4 *)
-      (* Add nutation *) +. delta_psi *. dcos epsilon in
+      (* Add nutation *) +. nutation in
   theta0 %. 360.
 
 let local_hour sidereal longitude {ra=ra; _ } =
