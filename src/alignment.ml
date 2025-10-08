@@ -95,6 +95,7 @@ let solar jd =
 
   let theta = l0 +. c in
 
+  (* Add nutation *)
   let omega = 125.04 -. 1934.136 *. t in
   let lm = theta -. 0.00569 -. 0.00478 *. (dsin omega) in
 
@@ -135,6 +136,7 @@ let find day longitude latitude lowest highest distance =
            Seq.iterate next sunset
            |> Seq.filter_map (fun dt ->
                   let solar_coordinates = solar @@ Calendar.to_jd dt in
+                  (* Nutation is already included in these calculations *)
                   let sun_at_target = horizontal_of_equatorial dt (-. longitude) latitude solar_coordinates in
                   let bearing = (sun_at_target.az +. 180.) %. 360. in
                   match Geodesy.(direct wgs84 latitude longitude bearing distance) with
