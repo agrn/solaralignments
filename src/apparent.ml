@@ -13,5 +13,5 @@ let apparent_height ho hm dist r =
   rad2deg altrad
 
 let bennett_refr h =
-  (* Jean Meeus, Astronomical Algorithms, Formule 15.4 *)
+  (* Jean Meeus, Astronomical Algorithms, Formula 15.4 *)
   h +. subdeg 0. (1.02 /. (dtan (h +. (10.3 /. (h +. 5.11))))) 0.

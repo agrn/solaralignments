@@ -6,7 +6,7 @@ open Coordinates
 open Helpers
 
 let j2000 jd =
-  (* Astronomical Algorithms, Jean Meeus, Formule 24.1 *)
+  (* Astronomical Algorithms, Jean Meeus, Formula 24.1 *)
   (jd -. 2451545.) /. 36525.
 
 let dynamical dt =
@@ -20,14 +20,14 @@ let dynamical dt =
     0. (* TODO implement other time periods *)
 
 let obliquity t =
-  (* Astronomical Algorithms, Jean Meeus, Formule 21.2 *)
+  (* Astronomical Algorithms, Jean Meeus, Formula 21.2 *)
   (subdeg 23. 26. 21.448) +.
     t *. (-.(subdeg 0. 0. 46.8150) +.
             t *. (-.(subdeg 0. 0. 0.00059) +.
                     t *. subdeg 0. 0. 0.001813))
 
 let nutation dt =
-  (* Astronomical Algorithms, Jean Meeus, Chapitre 21, méthode basse fidélité *)
+  (* Astronomical Algorithms, Jean Meeus, Chapitre 21, low precision method *)
   let jd = Calendar.to_jd dt +. dynamical dt in
   let t = j2000 jd in
 
@@ -47,7 +47,7 @@ let nutation dt =
   delta_psi, epsilon
 
 let sidereal_time ?(add_nutation=false) dt =
-  (* Astronomical Algorithms, Jean Meeus, Chapitre 11 *)
+  (* Astronomical Algorithms, Jean Meeus, Chapter 11 *)
   let jd = Calendar.to_jd dt in
   let t = j2000 jd in
   let nutation =
@@ -63,15 +63,15 @@ let sidereal_time ?(add_nutation=false) dt =
   theta0 %. 360.
 
 let local_hour sidereal longitude {ra=ra; _ } =
-  (* Astronomical Algorithms, Jean Meeus, Chapitre 12 *)
+  (* Astronomical Algorithms, Jean Meeus, Chapter 12 *)
   sidereal -. longitude -. ra
 
 let alt lh latitude {dec=dec; _ } =
-  (* Astronomical Algorithms, Jean Meeus, Formule 12.6 *)
+  (* Astronomical Algorithms, Jean Meeus, Formula 12.6 *)
   Float.asin ((dsin latitude) *. (dsin dec) +. (dcos latitude) *. (dcos dec) *. (dcos lh)) (* 12.6 *)
 
 let horizontal_of_equatorial ?(add_nutation=false) dt longitude latitude coords =
-  (* Astronomical Algorithms, Jean Meeus, Formules 12.5 et 12.6 *)
+  (* Astronomical Algorithms, Jean Meeus, Formulae 12.5 et 12.6 *)
   let sidereal = sidereal_time ~add_nutation dt in
   let lh = local_hour sidereal longitude coords in
 
@@ -84,8 +84,8 @@ let horizontal_of_equatorial ?(add_nutation=false) dt longitude latitude coords 
   { alt = rad2deg alt; az = rad2deg az }
 
 let solar jd =
-  (* Calcul des coordonnées solaires, basé sur Astronomical Algorithms, Jean
-     Meeus, Chapitre 24, méthode basse fidélité *)
+  (* Solar coordinates computation, based on Astronomical Algorithms, Jean
+     Meeus, Chapter 24, low precision method *)
   let t = j2000 jd in
   let l0 = (280.46645 +. t *. 36000.76983 +. (t *. t) *. 0.0003032) %. 360. in (* 24.2 *)
   let m = (357.52910 +. t *. (35999.05030 +. t *. (-0.0001559 -. t *. 0.00000048))) %. 360. in (* 24.3 *)
@@ -109,7 +109,8 @@ let solar jd =
   { ra = (rad2deg ra) %. 360.; dec = (rad2deg dec) %. 360. }
 
 let compute_rts fn correction date longitude latitude =
-  (* Calcul de l'heure du coucher du soleil, basé sur Astronomical Algorithms, Jean Meeus, Chapitre 14 *)
+  (* Parametric rising, transit and setting computation, based on Astronomical
+     Algorithms, Jean Meeus, Chapter 14 *)
   let dt = Calendar.from_date date in
   let jd = Calendar.to_jd dt in
   let delta_t = dynamical dt in
