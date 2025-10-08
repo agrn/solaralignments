@@ -26,10 +26,10 @@ let nutation dt =
   let lsun = 280.4665 +. 36000.7698 *. t in
   let lmoon = 218.3165 +. 481267.8813 *. t in
 
-  let delta_psi = -. (subdeg 0. 0. 17.2) *. (dsin omega) -. (subdeg 0. 0. 1.32) *. (dsin 2. *. lsun) -.
-                    (subdeg 0. 0. 0.23) *. (dsin 2. *. lmoon) +. (subdeg 0. 0. 0.21) *. (dsin 2. *. omega) in
-  let delta_epsilon = (subdeg 0. 0. 9.20) *. (dcos omega) +. (subdeg 0. 0. 0.57) *. (dcos 2. *. lsun) +.
-                        (subdeg 0. 0. 0.1) *. (dcos 2. *. lmoon) -. (subdeg 0. 0. 0.09) *. (dcos 2. *. omega) in
+  let delta_psi = -. (subdeg 0. 0. 17.2) *. (dsin omega) -. (subdeg 0. 0. 1.32) *. (dsin (2. *. lsun)) -.
+                    (subdeg 0. 0. 0.23) *. (dsin (2. *. lmoon)) +. (subdeg 0. 0. 0.21) *. (dsin (2. *. omega)) in
+  let delta_epsilon = (subdeg 0. 0. 9.20) *. (dcos omega) +. (subdeg 0. 0. 0.57) *. (dcos (2. *. lsun)) +.
+                        (subdeg 0. 0. 0.1) *. (dcos (2. *. lmoon)) -. (subdeg 0. 0. 0.09) *. (dcos (2. *. omega)) in
 
   let epsilon0 = obliquity t in
   let epsilon = epsilon0 +. delta_epsilon in
