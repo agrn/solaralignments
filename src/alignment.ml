@@ -61,18 +61,18 @@ let sidereal_time ?(add_nutation=false) dt =
       (* Add nutation *) +. delta_psi *. dcos epsilon in
   theta0 %. 360.
 
-let local_hour sidereal longitude ra =
+let local_hour sidereal longitude {ra=ra; _ } =
   (* Astronomical Algorithms, Jean Meeus, Chapitre 12 *)
   sidereal -. longitude -. ra
 
-let alt lh latitude coords =
+let alt lh latitude {dec=dec; _ } =
   (* Astronomical Algorithms, Jean Meeus, Formule 12.6 *)
-  Float.asin ((dsin latitude) *. (dsin coords.dec) +. (dcos latitude) *. (dcos coords.dec) *. (dcos lh)) (* 12.6 *)
+  Float.asin ((dsin latitude) *. (dsin dec) +. (dcos latitude) *. (dcos dec) *. (dcos lh)) (* 12.6 *)
 
 let horizontal_of_equatorial ?(add_nutation=false) dt longitude latitude coords =
   (* Astronomical Algorithms, Jean Meeus, Formules 12.5 et 12.6 *)
   let sidereal = sidereal_time ~add_nutation dt in
-  let lh = local_hour sidereal longitude coords.ra in
+  let lh = local_hour sidereal longitude coords in
 
   (* 12.5 *)
   let az = Float.atan2
