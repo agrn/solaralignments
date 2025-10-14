@@ -11,7 +11,7 @@ let j2000 jd =
 
 let dynamical dt =
   (* Dynamical time formulas from https://eclipse.gsfc.nasa.gov/LEcat5/deltatpoly.html *)
-  let y = ((float_of_int Calendar.(year dt + (Date.int_of_month @@ month dt))) -. 0.5) /. 12. in
+  let y = Calendar.((float_of_int @@ year dt) +. ((float_of_int @@ Date.int_of_month @@ month dt) -. 0.5) /. 12.) in
   if Calendar.year dt >= 2005 && Calendar.year dt < 2050 then
     let t = y -. 2000. in
     let deltaT = 62.92 +. t *. (0.32217 +. t *. 0.005589) in
