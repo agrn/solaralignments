@@ -7,13 +7,19 @@ and a target (e.g. a mountain).  It is available either as a command-line tool
 ## Acknowledgements
 
 This project would be nothing without _Astronomical Algorithms_, 1st edition,
-written by Jean Meeus.  It is available online if you know where to look.
+written by Jean Meeus.  It is available online if you know where to look.  Dynamic
+time (ΔT) calculation is performed using [formulas provided by
+NASA](https://eclipse.gsfc.nasa.gov/SEhelp/deltatpoly2004.html); coordinates and
+distances are computed using [Vincenty's
+formulae](https://www.ngs.noaa.gov/PUBS_LIB/inverse.pdf).
 
-This project is mostly written in OCaml, and relies on CalendarLib and
-js_of_ocaml.
+This project is mostly written in OCaml, and relies on
+[CalendarLib](https://github.com/ocaml-community/calendar) and `js_of_ocaml`.
 
-The map shown on the web interface is rendered with Leaflet, using data from
-OpenStreetMap and tiles from OpenStreetMap-fr.
+The map shown on the web interface is rendered with
+[Leaflet](https://leafletjs.com/), using data from
+[OpenStreetMap](https://www.openstreetmap.org/copyright) and tiles from
+[OpenStreetMap-fr](https://www.openstreetmap.fr/mentions-legales/).
 
 ## License
 
