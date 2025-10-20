@@ -72,22 +72,20 @@ let direct ellipsoid latitude longitude bearing distance =
     else if delta > 1.0e-9 then
       None
     else
-      Some (sigma, twoSigmaM) in
+      let sinSigma = sin sigma and
+          cosSigma = cos sigma in
+
+      let phi2 =
+        atan2 (sinU *. cosSigma +. cosU *. sinSigma *. (cos bearing))
+          ((1. -. f) *. sqrt ((sinAlpha ** 2.) +. (pow (sinU *. sinSigma -. cosU *. cosSigma *. (cos bearing)) 2.))) and
+
+          lambda = atan2 (sinSigma *. (sin bearing)) (cosU *. cosSigma -. sinU *. sinSigma *. (cos bearing)) in
+      let l = lambda -. latitude_remainder c f sinAlpha sigma sinSigma cosSigma (cos twoSigmaM) and
+          alpha2 = atan2 sinAlpha (-. sinU *. sinSigma +. cosU *. cosSigma *. (cos bearing)) in
+
+      Some (rad2deg phi2, rad2deg (longitude +. l), rad2deg alpha2) in
 
   converge infinity baseSigma 0. 0
-  |> Option.map (fun (sigma, twoSigmaM) ->
-         let sinSigma = sin sigma and
-             cosSigma = cos sigma in
-
-         let phi2 =
-           atan2 (sinU *. cosSigma +. cosU *. sinSigma *. (cos bearing))
-             ((1. -. f) *. sqrt ((sinAlpha ** 2.) +. (pow (sinU *. sinSigma -. cosU *. cosSigma *. (cos bearing)) 2.))) and
-
-             lambda = atan2 (sinSigma *. (sin bearing)) (cosU *. cosSigma -. sinU *. sinSigma *. (cos bearing)) in
-         let l = lambda -. latitude_remainder c f sinAlpha sigma sinSigma cosSigma (cos twoSigmaM) and
-             alpha2 = atan2 sinAlpha (-. sinU *. sinSigma +. cosU *. cosSigma *. (cos bearing)) in
-
-         rad2deg phi2, rad2deg (longitude +. l), rad2deg alpha2)
 
 let inverse ellipsoid lat1 long1 lat2 long2 =
   let f = ellipsoid.flattening in
@@ -102,7 +100,7 @@ let inverse ellipsoid lat1 long1 lat2 long2 =
   let _, u1 = reduced_latitude ellipsoid lat1 and
       _, u2 = reduced_latitude ellipsoid lat2 in
 
-  let rec converge delta lambda para cnt =
+  let rec converge delta lambda bA bB sigma cos2sigmaM cnt =
     if delta > 1.0e-12 && cnt < 50 then
       let sinSigma = pow (cos u2 *. sin lambda) 2. +.
                        pow (cos u1 *. sin u2 -. sin u1 *. cos u2 *. cos lambda) 2. |> sqrt in
@@ -114,16 +112,14 @@ let inverse ellipsoid lat1 long1 lat2 long2 =
       let bA, bB, c = getABC ellipsoid cos2alpha in
       let lambda' = l +. latitude_remainder c f sinAlpha sigma sinSigma cosSigma cos2sigmaM in
       let delta = abs (lambda' -. lambda) in
-      converge delta lambda' (bA, bB, sigma, cos2sigmaM) (cnt + 1)
+      converge delta lambda' bA bB sigma cos2sigmaM (cnt + 1)
     else if delta > 1.0e-12 then
       None
     else
-      Some (lambda, para)  in
+      let deltaSigma = delta_sigma bB sigma cos2sigmaM in
+      let s = b *. bA *. (sigma -. deltaSigma) in
+      let alpha1 = atan2 (cos u2 *. sin lambda) (cos u1 *. sin u2 -. sin u1 *. cos u2 *. cos lambda) in
+      let alpha2 = atan2 (cos u1 *. sin lambda) (cos u1 *. sin u2 *. cos lambda -. sin u1 *. cos u2) in
+      Some (s, rad2deg alpha1, rad2deg alpha2) in
 
-  converge infinity l (0., 0., 0., 0.) 0
-  |> Option.map (fun (lambda, (bA, bB, sigma, cos2sigmaM)) ->
-         let deltaSigma = delta_sigma bB sigma cos2sigmaM in
-         let s = b *. bA *. (sigma -. deltaSigma) in
-         let alpha1 = atan2 (cos u2 *. sin lambda) (cos u1 *. sin u2 -. sin u1 *. cos u2 *. cos lambda) in
-         let alpha2 = atan2 (cos u1 *. sin lambda) (cos u1 *. sin u2 *. cos lambda -. sin u1 *. cos u2) in
-         s, rad2deg alpha1, rad2deg alpha2)
+  converge infinity l 0. 0. 0. 0. 0
