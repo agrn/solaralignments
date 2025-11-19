@@ -71,7 +71,7 @@ let alt lh latitude {dec=dec; _ } =
   Float.asin ((dsin latitude) *. (dsin dec) +. (dcos latitude) *. (dcos dec) *. (dcos lh)) (* 12.6 *)
 
 let horizontal_of_equatorial ?(add_nutation=false) dt longitude latitude coords =
-  (* Astronomical Algorithms, Jean Meeus, Formulae 12.5 et 12.6 *)
+  (* Astronomical Algorithms, Jean Meeus, Formulae 12.5 and 12.6 *)
   let sidereal = sidereal_time ~add_nutation dt in
   let lh = local_hour sidereal longitude coords in
 
