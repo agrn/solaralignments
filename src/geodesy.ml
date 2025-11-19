@@ -31,15 +31,15 @@ let reduced_latitude ellipsoid latitude =
   tanU, atan tanU
 
 let latitude_remainder c f sinAlpha sigma sinSigma cosSigma cos2sigmaM =
-  (1. -. c) *. f *. sinAlpha *. (sigma +. c *. sinSigma *. ((cos2sigmaM) +. c *. cosSigma *. (-1. +. 2. *. (pow (cos2sigmaM) 2.))))
+  (1. -. c) *. f *. sinAlpha *. (sigma +. c *. sinSigma *. (cos2sigmaM +. c *. cosSigma *. (-1. +. 2. *. cos2sigmaM *. cos2sigmaM)))
 
 let delta_sigma bB sigma cos2sigmaM =
   bB *. sin sigma *.
     (cos2sigmaM +. (bB /. 4.) *.
-                     ((cos sigma) *. (-1. +. 2. *. (pow (cos2sigmaM) 2.) -.
-                                        (bB /. 6.) *. (cos2sigmaM) *.
+                     ((cos sigma) *. (-1. +. 2. *. cos2sigmaM *. cos2sigmaM -.
+                                        (bB /. 6.) *. cos2sigmaM *.
                                           (-3. +. 4. *. (pow (sin sigma) 2.)) *.
-                                            (-3. +. 4. *. (pow (cos2sigmaM) 2.)))))
+                                            (-3. +. 4. *. cos2sigmaM *. cos2sigmaM))))
 
 let direct ellipsoid latitude longitude bearing distance =
   let f = ellipsoid.flattening in
