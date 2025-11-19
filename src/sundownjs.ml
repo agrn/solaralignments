@@ -99,7 +99,7 @@ let read_and_update_pin preset_field longitude_field latitude_field _evt =
   update_pin lat lng;
   Js._true
 
-let handle_map_click_event pin_radio distance_radio preset_field longitude_field latitude_field distance_field lat lng =
+let handle_map_click_event pin_radio distance_radio preset_field longitude_field latitude_field altitude_field observer_field distance_field lowest_field highest_field lat lng =
   if is_checked pin_radio then begin
       write_value lat latitude_field;
       write_value lng longitude_field;
@@ -112,7 +112,8 @@ let handle_map_click_event pin_radio distance_radio preset_field longitude_field
           long1 = read_float_from_field longitude_field in
       Geodesy.(inverse wgs84 lat1 long1 lat lng)
       |> Option.iter (fun (distance, _, _) ->
-             write_value (Float.ceil (distance /. 1000.)) distance_field);
+             write_value (Float.ceil (distance /. 1000.)) distance_field;
+             update_altitude altitude_field observer_field distance_field lowest_field highest_field);
       uncheck distance_radio
     end
 
@@ -158,7 +159,7 @@ let setup () =
   distance_field##.onchange := Dom_html.handler update_altitude;
   Js.export "alignment"
     (object%js
-       method handleMapClickEvent = handle_map_click_event pin_radio distance_radio preset_field longitude_field latitude_field distance_field
+       method handleMapClickEvent = handle_map_click_event pin_radio distance_radio preset_field longitude_field latitude_field altitude_field observer_field distance_field lowest_field highest_field
      end)
 
 let () =
