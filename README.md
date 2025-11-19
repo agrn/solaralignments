@@ -11,7 +11,9 @@ written by Jean Meeus.  It is available online if you know where to look.  Dynam
 time (ΔT) calculation is performed using [formulas provided by
 NASA](https://eclipse.gsfc.nasa.gov/SEhelp/deltatpoly2004.html); coordinates and
 distances are computed using [Vincenty's
-formulae](https://www.ngs.noaa.gov/PUBS_LIB/inverse.pdf).
+formulae](https://www.ngs.noaa.gov/PUBS_LIB/inverse.pdf); apparent altitude of
+the target mountain is calculated using [Andrew T. Young's
+solution](https://aty.sdsu.edu/explain/atmos_refr/altitudes.html).
 
 This project is mostly written in OCaml, and relies on
 [CalendarLib](https://github.com/ocaml-community/calendar) and `js_of_ocaml`.
