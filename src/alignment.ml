@@ -152,7 +152,13 @@ let sunset =
 let find day longitude latitude lowest highest distance =
   sunset day (-. longitude) latitude
   |> Option.map (fun dt ->
-         let sunset = Calendar.(rem dt (Period.second (second dt))) in
+         let sunset =
+           let period =
+             if Calendar.second dt < 30 then
+               -Calendar.second dt
+             else
+               60 - Calendar.second dt in
+           Calendar.(add dt @@ Period.second period) in
 
          let position =
            let next dt =
