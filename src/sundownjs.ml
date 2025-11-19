@@ -47,6 +47,9 @@ let is_checked field =
 let uncheck field =
   field##.checked := Js._false
 
+let write_date date field =
+  field##.value := Js.string @@ Printer.Date.to_string date
+
 let write_value value field =
   let num = Js.number_of_float value in
   field##.value := num##toString
@@ -85,8 +88,7 @@ let setup_today today_button date_field =
   today_button##.onclick :=
     Dom_html.handler (fun evt ->
         Dom.preventDefault evt;
-        let today = Printer.Date.to_string @@ Date.today () in
-        date_field##.value := Js.string today;
+        write_date (Date.today ()) date_field;
         Js._true)
 
 let reset_preset_index preset_field =
