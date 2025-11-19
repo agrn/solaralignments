@@ -63,6 +63,14 @@ let update_altitude altitude_field observer_field distance_field lowest_field hi
   write_value (altitude -. (avg_sun_size /. 2.)) lowest_field;
   write_value (altitude +. (avg_sun_size /. 2.)) highest_field
 
+let write_preset longitude_field latitude_field altitude_field observer_field distance_field preset =
+  update_pin preset.latitude preset.longitude;
+  write_value preset.longitude longitude_field;
+  write_value preset.latitude latitude_field;
+  write_value preset.target_altitude altitude_field;
+  write_value preset.observer_altitude observer_field;
+  write_value preset.distance distance_field
+
 let setup_presets (preset_field : Dom_html.selectElement Js.t) longitude_field latitude_field altitude_field observer_field lowest_field highest_field distance_field =
   let document = Dom_html.document in
   List.iter (fun preset ->
@@ -74,12 +82,7 @@ let setup_presets (preset_field : Dom_html.selectElement Js.t) longitude_field l
         let idx = preset_field##.selectedIndex - 1 in
         if idx >= 0 then begin
             let* preset = List.nth_opt presets idx in
-            write_value preset.longitude longitude_field;
-            write_value preset.latitude latitude_field;
-            write_value preset.target_altitude altitude_field;
-            write_value preset.observer_altitude observer_field;
-            write_value preset.distance distance_field;
-            update_pin preset.latitude preset.longitude;
+            write_preset longitude_field latitude_field altitude_field observer_field distance_field preset;
             update_altitude altitude_field observer_field distance_field lowest_field highest_field
           end;
         Js._true)
